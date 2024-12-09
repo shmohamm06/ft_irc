@@ -154,18 +154,23 @@ void Channel::addUserToChannel(User user_object) {
         send(it->_fd, creation_msg.c_str(), creation_msg.length(), 0); // Send creation message as NOTICE
     }
 
-    std::string channel_welcome_msg;
-    channel_welcome_msg = GREEN "Welcome to " + this->getName() + " channel, " + user_object._nickname + "!" RESET "\r\n";
-    channel_welcome_msg += BLUE "Here are some commands you can use:" RESET "\r\n";
-    channel_welcome_msg += CYAN " - JOIN <channel> [key]: Join a channel" RESET "\r\n";
-    channel_welcome_msg += CYAN " - PART <channel>: Leave a channel" RESET "\r\n";
-    channel_welcome_msg += CYAN " - MSG <user/channel> <message>: Send a private message" RESET "\r\n";
-    channel_welcome_msg += CYAN " - NICK <new_nickname>: Change your nickname" RESET "\r\n";
-    channel_welcome_msg += CYAN " - WHO <channel>: List users in a channel" RESET "\r\n";
-    channel_welcome_msg += CYAN " - INVITE <channel> <user>: Invite a user to a channel" RESET "\r\n";
-    channel_welcome_msg += CYAN " - KICK <user> <channel>: Kick a user from a channel" RESET "\r\n";
-    channel_welcome_msg += CYAN " - TOPIC <channel> <topic>: Set the channel topic" RESET "\r\n";
-    channel_welcome_msg += CYAN " - MODE <channel> <mode(eg: +/-i, +/-o, +/-t, +/-k, +/-l)> [parameters]: Set channel modes" RESET "\r\n";
+std::string channel_welcome_msg;
+
+// Welcome message
+channel_welcome_msg = BRIGHT_GREEN "Welcome to the \"" + this->getName() + "\" channel, " 
+                       + user_object._nickname + "!" RESET "\r\n";
+channel_welcome_msg += BRIGHT_BLUE "Below are some commands to help you get started:" RESET "\r\n";
+
+// Command list
+channel_welcome_msg += BRIGHT_CYAN " - JOIN <channel> [key]: Enter a channel (provide key if required)" RESET "\r\n";
+channel_welcome_msg += BRIGHT_CYAN " - PART <channel>: Exit the channel gracefully" RESET "\r\n";
+channel_welcome_msg += BRIGHT_CYAN " - MSG <user/channel> <message>: Send a private or public message" RESET "\r\n";
+channel_welcome_msg += BRIGHT_CYAN " - NICK <new_nickname>: Update your nickname" RESET "\r\n";
+channel_welcome_msg += BRIGHT_CYAN " - WHO <channel>: See who’s currently in the channel" RESET "\r\n";
+channel_welcome_msg += BRIGHT_CYAN " - INVITE <channel> <user>: Bring another user to the channel" RESET "\r\n";
+channel_welcome_msg += BRIGHT_CYAN " - KICK <user> <channel>: Remove a user from the channel" RESET "\r\n";
+channel_welcome_msg += BRIGHT_CYAN " - TOPIC <channel> <topic>: Change or set the channel topic" RESET "\r\n";
+channel_welcome_msg += BRIGHT_CYAN " - MODE <channel> <+/-mode> [parameters]: Adjust channel settings" RESET "\r\n";
 
     // Send the welcome message to the new user
     send(user_object._fd, channel_welcome_msg.c_str(), channel_welcome_msg.length(), 0);
