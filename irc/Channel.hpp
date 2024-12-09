@@ -16,6 +16,7 @@
 #include <map>
 
 class User;
+
 class Channel
 {
 	private:
@@ -73,5 +74,6 @@ class Channel
 		void removeOperator(User& user);
 		bool isEmpty();
 };
+// everything with channel done by Yasin Usman
 
 #endif

@@ -7,6 +7,7 @@
 #include <vector>
 #include "Server.hpp"
 
+
 class User;
 class Channel;
 class Command{

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ircserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: shmohamm <shmohamm@student.42abudhabi.a    +#+  +:+       +#+        */
+/*   By: tzhakypo <tzhakypo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/01 19:18:17 by mayan             #+#    #+#             */
-/*   Updated: 2024/11/04 11:11:00 by shmohamm         ###   ########.fr       */
+/*   Updated: 2024/10/04 18:13:46 by tzhakypo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,3 +31,4 @@ int main(int ac, char **av)
 
 	}
 }
+
