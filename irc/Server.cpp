@@ -43,7 +43,7 @@ void	Check(int ac)
 {
 	if (ac != 3)
 	{
-		std::cerr << BRIGHT_RED << "Usage: ./ircserv [port] [PASS]" << RESET << std::endl;
+		std::cerr << RED << "Usage: ./ircserv [port] [PASS]" << RESET << std::endl;
 		exit(0);
 	}
 }
@@ -51,7 +51,7 @@ void	valid_arg(std::string a, std::string b, int c)
 {
 	if (a.empty() || b.empty() || c > MAX_PORT || a.length() > 5 || a.find_first_not_of("0123456789") != std::string::npos)
 	{
-		std::cerr << SHINY << BRIGHT_RED << "Error: Invalid arguments!" << RESET << std::endl;
+		std::cerr << RED << "Error: invalid arguments !" << RESET << std::endl;
 		exit(0);
 	}
 }
@@ -62,14 +62,13 @@ void Server::openSocket()
 
 	if ((Server::serverSocket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 	{
-        throw ServerException(std::string(SHINY) + BRIGHT_BRED + "Critical: Socket creation failed!" + RESET);
-        
+		throw ServerException(RED "Failed to create socket" RESET);
 	}
 	opt = 1;
 	if (setsockopt(Server::serverSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,
 			sizeof(opt)) < 0)
 	{
-        throw ServerException(std::string(SHINY) + BRIGHT_BRED + "Critical: setsockopt failed!" + RESET);
+		throw ServerException(RED "setsockopt failed" RESET);
 	}
 	Server::address.sin_family = AF_INET;
 	Server::address.sin_addr.s_addr = INADDR_ANY;
@@ -77,23 +76,17 @@ void Server::openSocket()
 	if (bind(Server::serverSocket, (struct sockaddr *)&Server::address,
 			sizeof(Server::address)) < 0)
 	{
-		throw ServerException(std::string(SHINY) + BRIGHT_BRED + "Critical: Bind failed!" + RESET);
-
-        
+		throw ServerException(RED "Bind failed" RESET);
 	}
 	if (listen(Server::serverSocket, MAX_CLIENTS) < 0)
 	{
-        throw ServerException(std::string(SHINY) + BRIGHT_BRED + "Critical: Listen failed!" + RESET);
-
+		throw ServerException(RED "Listen failed" RESET);
 	}
 	addrlen = sizeof(Server::address);
 	gethostname(c_hostName, MAX_HOST_NAME);
 	Server::_hostName = c_hostName;
-	std::cout << FRAMED << BRIGHT_GREEN << "IRC Server started on port " << _port
-          << " : " << _hostName << RESET << std::endl;
-
-	std::cout << SHADOW << BRIGHT_BLUE << "Waiting for incoming connections..." << RESET << std::endl;
-
+	std::cout << UNDERLINE << GREEN << BOLD << "IRC Server started on port " << _port << " : " << _hostName << RESET << std::endl;
+	std::cout << BLUE << BOLD << "Waiting for incoming connections..." << RESET << std::endl;
 }
 
 //This function call will block until a client connects, at which point it
@@ -122,8 +115,7 @@ void Server::acceptConnection()
 void Server::handleClientDisconnection(size_t i)
 {
 	getpeername(sd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
-	std::cout << BRIGHT_YELLOW << "Client disconnected" << RESET << std::endl;
-
+	std::cout << YELLOW << "Client disconnected" << RESET << std::endl;
 	close(sd);
 	_fds.erase(_fds.begin() + i);   // Удаляем сокет из вектора
 	users.erase(users.begin() + i); // Удаляем пользователя из списка
@@ -355,8 +347,7 @@ void Server::run()
         }
         if (FD_ISSET(serverSocket, &readfds)) {
             acceptConnection();
-            std::cout << BRIGHT_CYAN << "Client connected successfully!" << RESET << std::endl;
-
+            std::cout << GREEN << "Client connected" << RESET << std::endl;
         }
         handleClientMessages();
     }
