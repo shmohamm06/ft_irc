@@ -205,3 +205,155 @@ std::vector<std::string> Command::ft_split(std::string inputStr, char delimiter)
 	splitResult.push_back(currentSubstring);
 	return (splitResult);
 }
+
+/**
+ * Sends a private message to a specified user or channel.
+ * Handles user-to-user and user-to-channel messaging, with appropriate error checks.
+ */
+void Command::privmsg(std::string receiver, const std::vector<std::string>& splitmsg, User user) {
+
+    std::vector<Channel>::iterator channelIter;
+    std::vector<User>::iterator userIter;
+    unsigned long messageIndex = 2;
+
+    userIter = user_exist(receiver);
+    if (userIter == Server::users.end()) {
+        channelIter = channel_exist(receiver);
+        if (channelIter != Server::_channels.end()) {
+            if (channelIter->isUser(user)) {
+                std::vector<User> channelUsers = channelIter->getUsers();
+                for (std::vector<User>::iterator it = channelUsers.begin(); it != channelUsers.end(); ++it) {
+                    if (it->_fd != user._fd) {
+                        std::string msg = ":" + user._nickname + " CHANNEL-MSG " + receiver + " :";
+                        send(it->_fd, msg.c_str(), msg.length(), 0);
+                        while (messageIndex < splitmsg.size()) {
+                            send(it->_fd, splitmsg.at(messageIndex).c_str(), strlen(splitmsg.at(messageIndex).c_str()), 0);
+                            if (messageIndex + 1 < splitmsg.size()) {
+                                send(it->_fd, " ", 1, 0);
+                            }
+                            messageIndex++;
+                        }
+                        send(it->_fd, "\r\n", 2, 0);
+                        messageIndex = 2;
+                    }
+                }
+            } else {
+                ErrorMsg(user._fd, (channelIter->getName() + " :You are not part of the channel.\r\n"), "404");
+            }
+        }
+    } else {
+        if (user._fd == userIter->_fd) {
+            send(userIter->_fd, "Cannot send message to yourself.\r\n", strlen("Cannot send message to yourself.\r\n"), 0);
+        } else {
+            std::string msg = ":" + user._nickname + " PRIVMSG " + receiver + " :";
+            send(userIter->_fd, msg.c_str(), msg.length(), 0);
+            while (messageIndex < splitmsg.size()) {
+                send(userIter->_fd, splitmsg.at(messageIndex).c_str(), strlen(splitmsg.at(messageIndex).c_str()), 0);
+                if (messageIndex + 1 < splitmsg.size()) {
+                    send(userIter->_fd, " ", 1, 0);
+                }
+                messageIndex++;
+            }
+            send(userIter->_fd, "\r\n", 2, 0);
+            messageIndex = 2;
+        }
+    }
+}
+
+/**
+ * Invites a user to join a specified channel, ensuring proper permissions and channel mode settings.
+ */
+void Command::invite(std::string userName, std::string channelName, User inviter) {
+    std::vector<Channel>::iterator channelIter = channel_exist(channelName);
+    std::vector<User>::iterator inviteeIter = user_exist(userName);
+
+    if (channelIter != Server::_channels.end()) {
+        if (inviteeIter != Server::users.end()) {
+            if (channelIter->isOperator(inviter) != 1) {
+                ErrorMsg(inviter._fd, "You are not an operator.\r\n", "482");
+            } else {
+                if (channelIter->isUser(*inviteeIter)) {
+                    ErrorMsg(inviter._fd, "User is already in the channel.\r\n", "443");
+                } else {
+                    if (channelIter->isMode('i') == 1) {
+                        if (channelIter->isInvited(*inviteeIter)) {
+                            send(inviter._fd, "User is already invited.\r\n", strlen("User is already invited.\r\n"), 0);
+                        } else {
+                            std::string inviteMessage = "You're invited to the channel " + channelName + "\r\n";
+                            send(inviteeIter->_fd, inviteMessage.c_str(), inviteMessage.length(), 0);
+                            channelIter->invites.push_back(*inviteeIter);
+
+                            std::string confirmationMessage = "Invite was successfully sent to " + userName + " for the channel " + channelName + "\r\n";
+                            send(inviter._fd, confirmationMessage.c_str(), confirmationMessage.length(), 0);
+                        }
+                    } else {
+                        send(inviter._fd, "Channel is not in +i mode.\r\n", strlen("Channel is not in +i mode.\r\n"), 0);
+                    }
+                }
+            }
+        } else {
+            ErrorMsg(inviter._fd, "Invalid nickname.\r\n", "401");
+        }
+    } else {
+        ErrorMsg(inviter._fd, "Invalid channel.\r\n", "403");
+    }
+}
+
+/**
+ * Handles kicking a user from a channel. Verifies that the requesting user is an 
+ * operator, ensures the target user is part of the channel, and removes the target 
+ * user from the channel's user and operator lists. Optionally sends a reason for 
+ * the kick if provided.
+ */
+void Command::kick(std::string channel, std::string user_kick, const std::vector<std::string>& splitmsg, User user) {
+    std::vector<Channel>::iterator it_c = channel_exist(channel);
+
+    if (it_c != Server::_channels.end()) {
+        std::vector<User>::iterator it_s;
+        std::vector<User>::iterator it_o;
+        unsigned long i = 3;
+
+        for (it_s = it_c->users.begin(); it_s != it_c->users.end(); ++it_s) {
+            if (it_s->_nickname == user_kick) {
+                if (!it_c->isOperator(user)) {
+                    ErrorMsg(user._fd, "Not an operator.\r\n", "482");
+                    return;
+                }
+
+                if (user._nickname == user_kick) {
+                    ErrorMsg(user._fd, "You cannot kick yourself.\r\n", "404");
+                    return;
+                }
+
+                send(it_s->_fd, "You have been kicked from the channel.\r\n", strlen("You have been kicked from the channel.\r\n"), 0);
+
+                if (splitmsg.size() > 3) {
+                    send(it_s->_fd, "Reason for kicking: ", strlen("Reason for kicking: "), 0);
+                }
+
+                while (i < splitmsg.size()) {
+                    send(it_s->_fd, splitmsg.at(i).c_str(), strlen(splitmsg.at(i).c_str()), 0);
+                    send(it_s->_fd, " ", 1, 0);
+                    i++;
+                }
+
+                send(it_s->_fd, "\r\n", 2, 0);
+
+                it_c->users.erase(it_s);
+
+                for (it_o = it_c->operators.begin(); it_o != it_c->operators.end(); ++it_o) {
+                    if (it_o->_nickname == user_kick) {
+                        it_c->operators.erase(it_o);
+                        break;
+                    }
+                }
+
+                return;
+            }
+        }
+
+        ErrorMsg(user._fd, (user_kick + " :No such nickname.\r\n"), "401");
+    } else {
+        ErrorMsg(user._fd, (channel + " :No such channel.\r\n"), "403");
+    }
+}

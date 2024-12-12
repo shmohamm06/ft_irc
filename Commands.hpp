@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "Server.hpp"
+#include "Channel.hpp"
 
 class User;
 class Channel;
