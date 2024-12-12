@@ -340,26 +340,19 @@ const std::vector<std::string> createEightBallResponses() {
     return responses;
 }
 
-// Define the constant vector
-const std::vector<std::string> eightBallResponses = createEightBallResponses();
-
 void Command::privmsg(std::string receiver, const std::vector<std::string>& splitmsg, User user) {
 
     std::vector<Channel>::iterator it_channel;
     std::vector<User>::iterator it_user;
     unsigned long i = 2;
 
-    // Check if the message is a request for the 8-ball
-    if (splitmsg.size() > 1 && splitmsg[1] == "!8ball") {
-        // Randomly select a response
-        srand(time(0)); // Seed the random number generator
-        int responseIndex = rand() % eightBallResponses.size();
-        std::string response = receiver + " :" + eightBallResponses[responseIndex] + "\r\n";
-
-        // Send the response back to the user
-        send(user._fd, response.c_str(), response.length(), 0);
-        return; // Exit after responding to the 8-ball request
+    // Combine message parts into a single string
+    std::string fullMessage;
+    for (size_t j = 2; j < splitmsg.size(); ++j) {
+        fullMessage += splitmsg[j] + (j < splitmsg.size() - 1 ? " " : "");
     }
+    // Profanity check
+    processMessageWithProfanityCheck(user._fd, fullMessage);
     // Check if the receiver is a user
     it_user = user_exist(receiver);
     if (it_user == Server::users.end()) {
@@ -408,6 +401,8 @@ void Command::privmsg(std::string receiver, const std::vector<std::string>& spli
         }
     }
 }
+
+
 
 
 

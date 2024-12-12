@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <algorithm>
+#include <fstream>
 #include "Channel.hpp"
 #include "User.hpp"
 #include "Command.hpp"
