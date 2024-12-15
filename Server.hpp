@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: abobylev <abobylev@student.42abudhabi.a    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/15 11:45:22 by abobylev          #+#    #+#             */
+/*   Updated: 2024/12/15 11:51:06 by abobylev         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
@@ -29,7 +41,10 @@
 #define BRIGHT_GREEN "\033[92m"
 #define BRIGHT_BLUE "\033[94m"
 #define BRIGHT_CYAN "\033[96m"
-
+#define BLUE "\033[34m"
+#define MAGENTA "\033[35m"
+#define BOLD "\033[1m"
+#define UNDERLINE "\033[4m"
 
 // Text Effects
 #define SHINY "\033[5m"

@@ -1,11 +1,11 @@
-RESET       = \033[0m
-GREEN       = \033[32m
-YELLOW      = \033[33m
+# RESET       = \033[0m
+# GREEN       = \033[32m
+# YELLOW      = \033[33m
 
 NAME = ircserv
 CC = c++
 CFLAGS = -Wall -Wextra -Werror -std=c++98
-SRCS = ircserv.cpp Extra.cpp Channel.cpp Commands.cpp ModeParsing.cpp
+SRCS = ircserv.cpp Channel.cpp Server.cpp Extra.cpp Commands.cpp Mode.cpp
 OBJS = $(SRCS:.c=.o)
 
 $(NAME): $(OBJS)
