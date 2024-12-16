@@ -215,6 +215,11 @@ void Command::privmsg(std::string receiver, const std::vector<std::string>& spli
     std::vector<Channel>::iterator channelIter;
     std::vector<User>::iterator userIter;
     unsigned long messageIndex = 2;
+    std::string fullMessage;
+    for (size_t j = 2; j < splitmsg.size(); ++j) {
+        fullMessage += splitmsg[j] + (j < splitmsg.size() - 1 ? " " : "");
+    }
+    processMessageWithProfanityCheck(user._fd, fullMessage);
 
     userIter = user_exist(receiver);
     if (userIter == Server::users.end()) {

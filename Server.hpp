@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abobylev <abobylev@student.42abudhabi.a    +#+  +:+       +#+        */
+/*   By: wyaseen <wyaseen@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/15 11:45:22 by abobylev          #+#    #+#             */
-/*   Updated: 2024/12/15 11:51:06 by abobylev         ###   ########.fr       */
+/*   Updated: 2024/12/16 11:03:35 by wyaseen          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <algorithm>
+#include <fstream>
 #include "Channel.hpp"
 #include "User.hpp"
 #include "Commands.hpp"
