@@ -88,7 +88,7 @@ void Channel::exec_mode(std::string modeSetting, User &user, std::string argumen
                         send(user._fd, "User is already an operator.\r\n", strlen("User is already an operator.\r\n"), 0);
                     } else {
                         this->operators.push_back(*userIt);
-                        send(userIt->_fd, BRIGHT_GREEN "You have been granted operator status.\r\n" RESET, strlen("You have been granted operator status.\r\n"), 0);
+                        send(userIt->_fd, BRIGHT_WHITE "You have been granted operator status.\r\n" RESET, strlen("You have been granted operator status.\r\n"), 0);
                     }
                 } else {
                     userIt = this->channel_operator(userIt->_fd);

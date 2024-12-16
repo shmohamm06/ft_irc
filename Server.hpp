@@ -40,7 +40,7 @@
 // Foreground Colors
 #define BRIGHT_YELLOW "\033[93m"
 #define BRIGHT_RED "\033[91m"
-#define BRIGHT_GREEN "\033[92m"
+#define BRIGHT_WHITE "\033[97m"
 #define BRIGHT_BLUE "\033[94m"
 #define BRIGHT_CYAN "\033[96m"
 #define BLUE "\033[34m"
@@ -48,7 +48,7 @@
 #define BOLD "\033[1m"
 #define UNDERLINE "\033[4m"
 
-// Text Effects
+// Effects of the text
 #define SHINY "\033[5m"
 #define SHADOW "\033[2m"
 #define FRAMED "\033[51m"
@@ -96,7 +96,7 @@ public:
 			virtual const char *what() const throw() { return _msg.c_str(); }
 	};
 	static std::vector<int> _fds;
-	static std::vector<User> users;  // Контейнер для пользователей
+	static std::vector<User> users; 
 	static std::vector<Channel> _channels;
     static void handleClientMessages();
 	static void openSocket(void);
@@ -106,9 +106,6 @@ public:
 	static bool isNicknameTaken(const std::string& nickname);
 	static bool isUsernameTaken(const std::string& username);
 	static void processCommand(int sd, const std::string& command);
-	// static void showUsers(void);
-	// static void showChannels(void);
-	// static std::string getPassword(void);
 };
 
 void valid_arg(std::string a, std::string b, int c);
