@@ -14,7 +14,7 @@ void ErrorMsg(int fd, const std::string &message, const std::string &key);
 std::vector<std::string> split(const std::string str);
 std::vector<std::string> ft_split(std::string str, char delimiter);
 bool detectProfanity(const std::string& message, std::string& detectedWord);
-void processMessageWithProfanityCheck(int userFd, const std::string& message);
+int processMessageWithProfanityCheck(int userFd, const std::string& message);
 
 
 #endif

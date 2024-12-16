@@ -211,15 +211,29 @@ std::vector<std::string> Command::ft_split(std::string inputStr, char delimiter)
  * Handles user-to-user and user-to-channel messaging, with appropriate error checks.
  */
 void Command::privmsg(std::string receiver, const std::vector<std::string>& splitmsg, User user) {
-
     std::vector<Channel>::iterator channelIter;
     std::vector<User>::iterator userIter;
     unsigned long messageIndex = 2;
     std::string fullMessage;
+
+    // Construct the full message from splitmsg
     for (size_t j = 2; j < splitmsg.size(); ++j) {
         fullMessage += splitmsg[j] + (j < splitmsg.size() - 1 ? " " : "");
     }
-    processMessageWithProfanityCheck(user._fd, fullMessage);
+
+    // Check for profanity
+    if (processMessageWithProfanityCheck(user._fd, fullMessage) == 1) {
+        channelIter = channel_exist(receiver);
+        if (channelIter != Server::_channels.end()) {
+            // Broadcast a message to the channel about the profanity
+            std::string msg = ":" + user._nickname + " :Message by user cannot be displayed due to profanity.\r\n";
+            std::vector<User> channelUsers = channelIter->getUsers();
+            for (std::vector<User>::iterator it = channelUsers.begin(); it != channelUsers.end(); ++it) {
+                send(it->_fd, msg.c_str(), msg.length(), 0);
+            }
+        }
+        return;
+    }
 
     userIter = user_exist(receiver);
     if (userIter == Server::users.end()) {
@@ -232,7 +246,8 @@ void Command::privmsg(std::string receiver, const std::vector<std::string>& spli
                         std::string msg = ":" + user._nickname + " CHANNEL-MSG " + receiver + " :";
                         send(it->_fd, msg.c_str(), msg.length(), 0);
                         while (messageIndex < splitmsg.size()) {
-                            send(it->_fd, splitmsg.at(messageIndex).c_str(), strlen(splitmsg.at(messageIndex).c_str()), 0);
+                            send(it->_fd, splitmsg.at(messageIndex).c_str(), strlen(splitmsg.at(messageIndex).c_str()),
+                                 0);
                             if (messageIndex + 1 < splitmsg.size()) {
                                 send(it->_fd, " ", 1, 0);
                             }
@@ -248,7 +263,8 @@ void Command::privmsg(std::string receiver, const std::vector<std::string>& spli
         }
     } else {
         if (user._fd == userIter->_fd) {
-            send(userIter->_fd, "Cannot send message to yourself.\r\n", strlen("Cannot send message to yourself.\r\n"), 0);
+            send(userIter->_fd, "Cannot send message to yourself.\r\n",
+                 strlen("Cannot send message to yourself.\r\n"), 0);
         } else {
             std::string msg = ":" + user._nickname + " PRIVMSG " + receiver + " :";
             send(userIter->_fd, msg.c_str(), msg.length(), 0);
@@ -264,6 +280,7 @@ void Command::privmsg(std::string receiver, const std::vector<std::string>& spli
         }
     }
 }
+
 
 /**
  * Invites a user to join a specified channel, ensuring proper permissions and channel mode settings.

@@ -74,8 +74,7 @@ bool detectProfanity(const std::string& message, std::string& detectedWord) {
 
     return false; // No profanity found
 }
-
-void processMessageWithProfanityCheck(int userFd, const std::string& message) {
+int processMessageWithProfanityCheck(int userFd, const std::string& message) {
     static std::map<std::string, int> profanityCounts; // Track profanity counts by user nickname
     std::string detectedWord;
 
@@ -88,10 +87,9 @@ void processMessageWithProfanityCheck(int userFd, const std::string& message) {
         }
     }
 
-    // Check if the user was found
     if (user == nullptr) {
         std::cerr << "Error: User with FD " << userFd << " not found." << std::endl;
-        return;
+        return 0; // No profanity, as the user wasn't found
     }
 
     // Check for profanity
@@ -115,19 +113,20 @@ void processMessageWithProfanityCheck(int userFd, const std::string& message) {
             for (std::vector<Channel>::iterator it = Server::_channels.begin(); it != Server::_channels.end(); ++it) {
                 for (std::vector<User>::iterator userIt = it->users.begin(); userIt != it->users.end(); ++userIt) {
                     if (compareUsersByNickname(*userIt, *user)) {
-                        it->users.erase(userIt); // Remove user from the channel
-                        std::cout << "User " << nickname << " has been removed from channel " << it->name << " due to repeated profanity." << std::endl;
-                        break; // Exit loop after removal
+                        it->users.erase(userIt);
+                        std::cout << "User " << nickname << " has been removed from channel " << it->name
+                                  << " due to repeated profanity." << std::endl;
+                        break;
                     }
                 }
             }
 
-            // Notify the user about being kicked
-            std::string kickMessage = "You have been removed from the channel(s) due to repeated violations of the rules.\r\n";
+            std::string kickMessage =
+                "You have been removed from the channel(s) due to repeated violations of the rules.\r\n";
             send(userFd, kickMessage.c_str(), kickMessage.length(), 0);
 
             profanityCounts.erase(nickname); // Reset the count after kicking
-            return;
+            return 1;
         }
 
         // Log the infraction
@@ -138,5 +137,9 @@ void processMessageWithProfanityCheck(int userFd, const std::string& message) {
         } else {
             std::cerr << "Failed to open log file for profanity logging.\n";
         }
+
+        return 1; // Profanity detected
     }
+
+    return 0; // No profanity detected
 }
