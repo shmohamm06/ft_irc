@@ -119,7 +119,6 @@ void Channel::addUserToChannel(User user_object) {
     if (operators.empty()) {
         operators.push_back(User(user_object));
     }
-
     // Check for user limit if the channel is in limit mode
     if (this->isMode('l')) {
         if (this->user_length() == this->_user_limit) {
