@@ -6,7 +6,7 @@
 /*   By: shmohamm <shmohamm@student.42abudhabi.a    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/15 11:45:12 by abobylev          #+#    #+#             */
-/*   Updated: 2024/12/17 11:16:16 by shmohamm         ###   ########.fr       */
+/*   Updated: 2024/12/17 11:19:58 by shmohamm         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,28 +20,37 @@
 #include <unistd.h>
 #include <unordered_map>
 
-// Static Member Initialization: Initializes server variables for configuration
-std::string Server::_password = ""; 
+// Initialize static member variables of the Server class
+std::string Server::_password = ""; // Server password
 std::string Server::bufferStr = "";
-std::string Server::_hostName = ""; 
+// Buffer string for message handling
+std::string Server::_hostName = ""; // Hostname of the server
 char Server::c_buffer[BUFFER_SIZE] = {0};
+// Character buffer for reading messages
 char Server::c_hostName[MAX_HOST_NAME] = {0};
-int Server::serverSocket = -1; 
+// Character buffer for storing hostname
+int Server::serverSocket = -1; // Server socket descriptor
 int Server::max_sd = -1;
-int Server::sd = -1; 
-int Server::valread = -1; 
-int Server::_port = -1; 
+// Maximum socket descriptor for select()
+int Server::sd = -1;      // Current socket descriptor
+int Server::valread = -1; // Value read from socket
+int Server::_port = -1;   // Server port number
 int Server::newSocket = -1;
+// New socket descriptor for accepted connections
 int Server::curIndex = -1;
+// Current index for handling clients
 int Server::addrlen = sizeof(struct sockaddr_in);
+// Length of the address structure
 std::vector<int> Server::_fds;
+// Vector of socket descriptors for connected clients
 std::vector<User> Server::users;
-struct sockaddr_in Server::address; 
+// Vector of User objects representing connected clients
+struct sockaddr_in Server::address; // Server address structure
 fd_set Server::readfds;
+// Set of socket descriptors for select()
 std::vector<Channel> Server::_channels;
 std::unordered_map<int, std::string> partialCommands;
 
-// Error checks
 void	Check(int ac)
 {
 	if (ac != 3)
@@ -59,7 +68,6 @@ void	valid_arg(std::string a, std::string b, int c)
 	}
 }
 
-// Socket Setup: Creates and configures the server socket
 void Server::openSocket()
 {
 	int	opt;
@@ -93,11 +101,11 @@ void Server::openSocket()
 	std::cout << BLUE << BOLD << "Waiting for incoming connections..." << RESET << std::endl;
 }
 
-// Accepting Connections: Handles new client connections.
-// This function call will block until a client connects, at which point it
-// returns a new socket descriptor for the connection, allowing you to communicate with that client.
+//This function call will block until a client connects, at which point it
+//returns a new socket descriptor for the connection, allowing you to communicate with that client.
 void Server::acceptConnection()
 {
+    // Assume newSocket is the new socket descriptor for the connected client
     int newSocket = accept(serverSocket, (struct sockaddr*)&address, (socklen_t*)&addrlen);
 
     if (newSocket < 0) {
@@ -105,33 +113,35 @@ void Server::acceptConnection()
         return;
     }
 
+    // Create a new User object and initialize its FD
     User newUser;
-    newUser._fd = newSocket; 
-    newUser._nickname = ""; 
+    newUser._fd = newSocket; // Assign the file descriptor
+    newUser._nickname = ""; // Initialize nickname or other user attributes as needed
 
+    // Add the new user to the users vector
     users.push_back(newUser);
-    _fds.push_back(newSocket); 
+    _fds.push_back(newSocket); // Also add the socket to the file descriptor list
 }
 
-// Client Disconnection: Safely removes disconnected clients
+// Обработка отключения клиента
 void Server::handleClientDisconnection(size_t i)
 {
 	getpeername(sd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
 	std::cout << YELLOW << "Client disconnected" << RESET << std::endl;
 	close(sd);
-	_fds.erase(_fds.begin() + i);   
-	users.erase(users.begin() + i); 
+	_fds.erase(_fds.begin() + i);   // Удаляем сокет из вектора
+	users.erase(users.begin() + i); // Удаляем пользователя из списка
 }
 
 
-// User Commands Execution: Processes IRC commands like JOIN, WHO, etc
+
 void User::execute(std::string mes, User *user) {
     std::vector<std::string> splitmsg = split(mes);
     if (splitmsg.empty()) {
         return;
     }
 
-    Command cmd;
+    Command cmd; // Create a Command object
     std::string cmdType = splitmsg.at(0);
     if (cmdType == "JOIN") {
         if (splitmsg.size() == 2) {
@@ -235,15 +245,18 @@ void Server::handleClientMessages() {
             if ((valread = read(sd, c_buffer, BUFFER_SIZE)) == 0) {
                 handleClientDisconnection(i);
             } else {
-                c_buffer[valread] = '\0'; 
+                c_buffer[valread] = '\0';  // Null-terminate the received data
 
+                // Append received data to any existing partial command
                 partialCommands[sd] += c_buffer;
 
+                // Process complete commands
                 size_t pos;
                 while ((pos = partialCommands[sd].find('\n')) != std::string::npos) {
                     std::string command = partialCommands[sd].substr(0, pos);
                     partialCommands[sd] = partialCommands[sd].substr(pos + 1);
 
+                    // Remove '\r' if present
                     if (!command.empty() && command.back() == '\r') {
                         command.pop_back();
                     }
@@ -255,7 +268,6 @@ void Server::handleClientMessages() {
     }
 }
 
-// Processes a client's command and handles IRC-specific logic for NICK, USER, and PASS
 void Server::processCommand(int sd, const std::string& command) {
     std::vector<std::string> splitmsg = split(command);
 
@@ -297,6 +309,7 @@ void Server::processCommand(int sd, const std::string& command) {
         }
     }
 
+    // Check if user has completed registration
     if (users[userIndex].pass_flag == 1 && users[userIndex].nick_flag == 1 && users[userIndex].user_flag == 1) {
         users[userIndex].execute(command, &users[userIndex]);
     }
@@ -320,7 +333,7 @@ bool Server::isUsernameTaken(const std::string &user) {
     return false;
 }
 
-// Main server loop that monitors connections, accepts new clients, and handles messages
+
 void Server::run()
 {
     while (true) {

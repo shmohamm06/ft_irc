@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: wyaseen <wyaseen@student.42.fr>            +#+  +:+       +#+        */
+/*   By: shmohamm <shmohamm@student.42abudhabi.a    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/15 11:45:22 by abobylev          #+#    #+#             */
-/*   Updated: 2024/12/16 11:03:35 by wyaseen          ###   ########.fr       */
+/*   Updated: 2024/12/17 11:22:17 by shmohamm         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@
 #define BRIGHT_YELLOW "\033[93m"
 #define BRIGHT_RED "\033[91m"
 #define BRIGHT_WHITE "\033[97m"
+#define BRIGHT_GREEN ""
 #define BRIGHT_BLUE "\033[94m"
 #define BRIGHT_CYAN "\033[96m"
 #define BLUE "\033[34m"
