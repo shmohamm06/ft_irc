@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: wyaseen <wyaseen@student.42.fr>            +#+  +:+       +#+        */
+/*   By: shmohamm <shmohamm@student.42abudhabi.a    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/15 11:45:12 by abobylev          #+#    #+#             */
-/*   Updated: 2024/12/17 11:25:42 by wyaseen          ###   ########.fr       */
+/*   Updated: 2024/12/17 11:37:02 by shmohamm         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,7 +148,7 @@ void User::execute(std::string mes, User *user) {
         } else {
             return;
         }
-    } else if (cmdType == "PRIVMSG" || cmdType == "MSG") {
+    } else if (cmdType == "PRIVMSG") {
         if (splitmsg.size() >= 3) {
             cmd.privmsg(splitmsg.at(1), splitmsg, *user);
         } else if (splitmsg.size() == 2) {
@@ -160,7 +160,21 @@ void User::execute(std::string mes, User *user) {
             send(user->_fd, S.c_str(), strlen(S.c_str()), 0);
             return;
         }
-    } else if (cmdType == "PING") {
+    } 
+    else if (cmdType == "MSG") {
+        if (splitmsg.size() >= 3) {
+            cmd.channelmsg(splitmsg.at(1), splitmsg, *user);
+        } else if (splitmsg.size() == 2) {
+            ErrorMsg(user->_fd, "411 :No recipient given\r\n", "411");
+        } else if (splitmsg.size() == 1) {
+            ErrorMsg(user->_fd, "411 :No recipient given\r\n", "411");
+        } else {
+            std::string S = "461 :Not enough parameters\r\n";
+            send(user->_fd, S.c_str(), strlen(S.c_str()), 0);
+            return;
+        }
+    }
+ else if (cmdType == "PING") {
         std::string pong = "PONG\r\n";
         send(user->_fd, pong.c_str(), pong.length(), 0);
     } else if (cmdType == "INVITE") {

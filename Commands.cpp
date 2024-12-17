@@ -206,7 +206,6 @@ std::vector<std::string> Command::ft_split(std::string inputStr, char delimiter)
  * Handles user-to-user and user-to-channel messaging, with appropriate error checks.
  */
 void Command::privmsg(std::string receiver, const std::vector<std::string>& splitmsg, User user) {
-    std::vector<Channel>::iterator channelIter;
     std::vector<User>::iterator userIter;
     unsigned long messageIndex = 2;
     std::string fullMessage;
@@ -216,10 +215,52 @@ void Command::privmsg(std::string receiver, const std::vector<std::string>& spli
     }
 
     if (processMessageWithProfanityCheck(user._fd, fullMessage) == 1) {
-        channelIter = channel_exist(receiver);
+        std::string msg = ":" + user._nickname + " :Message cannot be displayed due to profanity.\r\n";
+        send(user._fd, msg.c_str(), msg.length(), 0);
+        return;
+    }
+
+    userIter = user_exist(receiver);
+    if (userIter == Server::users.end()) {
+        ErrorMsg(user._fd, "401 :No such user.\r\n", "401");
+        return;
+    }
+
+    if (user._fd == userIter->_fd) {
+        send(user._fd, "Cannot send message to yourself.\r\n", 35, 0);
+    } else {
+        std::string msg = ":" + user._nickname + " PRIVMSG " + receiver + " :";
+        send(userIter->_fd, msg.c_str(), msg.length(), 0);
+
+        while (messageIndex < splitmsg.size()) {
+            send(userIter->_fd, splitmsg.at(messageIndex).c_str(), splitmsg.at(messageIndex).length(), 0);
+            if (messageIndex + 1 < splitmsg.size()) {
+                send(userIter->_fd, " ", 1, 0);
+            }
+            messageIndex++;
+        }
+        send(userIter->_fd, "\r\n", 2, 0);
+    }
+}
+
+void Command::channelmsg(std::string channelName, const std::vector<std::string>& splitmsg, User user) {
+    std::vector<Channel>::iterator channelIter;
+    unsigned long messageIndex = 2;
+    std::string fullMessage;
+
+    // Build the full message
+    for (size_t j = 2; j < splitmsg.size(); ++j) {
+        fullMessage += splitmsg[j] + (j < splitmsg.size() - 1 ? " " : "");
+    }
+
+    // Check for profanity
+    if (processMessageWithProfanityCheck(user._fd, fullMessage) == 1) {
+        channelIter = channel_exist(channelName);
         if (channelIter != Server::_channels.end()) {
-            std::string msg = ":" + user._nickname + " :Message by user cannot be displayed due to profanity.\r\n";
-            std::vector<User> channelUsers = channelIter->getUsers();
+            std::string msg = ":" + user._nickname + " :Message cannot be displayed due to profanity.\r\n";
+
+            // Store users in a local reference to avoid dangling issues
+            std::vector<User>& channelUsers = channelIter->getUsers();
             for (std::vector<User>::iterator it = channelUsers.begin(); it != channelUsers.end(); ++it) {
                 send(it->_fd, msg.c_str(), msg.length(), 0);
             }
@@ -227,51 +268,37 @@ void Command::privmsg(std::string receiver, const std::vector<std::string>& spli
         return;
     }
 
-    userIter = user_exist(receiver);
-    if (userIter == Server::users.end()) {
-        channelIter = channel_exist(receiver);
-        if (channelIter != Server::_channels.end()) {
-            if (channelIter->isUser(user)) {
-                std::vector<User> channelUsers = channelIter->getUsers();
-                for (std::vector<User>::iterator it = channelUsers.begin(); it != channelUsers.end(); ++it) {
-                    if (it->_fd != user._fd) {
-                        std::string msg = ":" + user._nickname + " CHANNEL-MSG " + receiver + " :";
-                        send(it->_fd, msg.c_str(), msg.length(), 0);
-                        while (messageIndex < splitmsg.size()) {
-                            send(it->_fd, splitmsg.at(messageIndex).c_str(), strlen(splitmsg.at(messageIndex).c_str()),
-                                 0);
-                            if (messageIndex + 1 < splitmsg.size()) {
-                                send(it->_fd, " ", 1, 0);
-                            }
-                            messageIndex++;
-                        }
-                        send(it->_fd, "\r\n", 2, 0);
-                        messageIndex = 2;
+    // Locate the channel
+    channelIter = channel_exist(channelName);
+    if (channelIter == Server::_channels.end()) {
+        ErrorMsg(user._fd, "403 :No such channel.\r\n", "403");
+        return;
+    }
+
+    // Check if user is part of the channel
+    if (channelIter->isUser(user)) {
+        // Store users in a local reference to avoid dangling issues
+        std::vector<User>& channelUsers = channelIter->getUsers();
+        for (std::vector<User>::iterator it = channelUsers.begin(); it != channelUsers.end(); ++it) {
+            if (it->_fd != user._fd) {
+                std::string msg = ":" + user._nickname + " CHANNEL-MSG " + channelName + " :";
+                send(it->_fd, msg.c_str(), msg.length(), 0);
+
+                // Send the full message part-by-part
+                while (messageIndex < splitmsg.size()) {
+                    send(it->_fd, splitmsg.at(messageIndex).c_str(), splitmsg.at(messageIndex).length(), 0);
+                    if (messageIndex + 1 < splitmsg.size()) {
+                        send(it->_fd, " ", 1, 0);
                     }
+                    messageIndex++;
                 }
-            } else {
-                ErrorMsg(user._fd, (channelIter->getName() + " :You are not part of the channel.\r\n"), "404");
+                send(it->_fd, "\r\n", 2, 0);
             }
         }
     } else {
-        if (user._fd == userIter->_fd) {
-            send(userIter->_fd, "Cannot send message to yourself.\r\n", 35, 0);
-        } else {
-            std::string msg = ":" + user._nickname + " PRIVMSG " + receiver + " :";
-            send(userIter->_fd, msg.c_str(), msg.length(), 0);
-            while (messageIndex < splitmsg.size()) {
-                send(userIter->_fd, splitmsg.at(messageIndex).c_str(), strlen(splitmsg.at(messageIndex).c_str()), 0);
-                if (messageIndex + 1 < splitmsg.size()) {
-                    send(userIter->_fd, " ", 1, 0);
-                }
-                messageIndex++;
-            }
-            send(userIter->_fd, "\r\n", 2, 0);
-            messageIndex = 2;
-        }
+        ErrorMsg(user._fd, (channelName + " :You are not part of the channel.\r\n"), "404");
     }
 }
-
 
 /**
  * Invites a user to join a specified channel, ensuring proper permissions and channel mode settings.
