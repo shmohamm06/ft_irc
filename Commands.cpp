@@ -248,19 +248,15 @@ void Command::channelmsg(std::string channelName, const std::vector<std::string>
     unsigned long messageIndex = 2;
     std::string fullMessage;
 
-    // Build the full message
     for (size_t j = 2; j < splitmsg.size(); ++j) {
         fullMessage += splitmsg[j] + (j < splitmsg.size() - 1 ? " " : "");
     }
 
-    // Check for profanity
     if (processMessageWithProfanityCheck(user._fd, fullMessage) == 1) {
         channelIter = channel_exist(channelName);
         if (channelIter != Server::_channels.end()) {
             std::string msg = ":" + user._nickname + " :Message cannot be displayed due to profanity.\r\n";
-
-            // Store users in a local reference to avoid dangling issues
-            std::vector<User>& channelUsers = channelIter->getUsers();
+            std::vector<User> channelUsers = channelIter->getUsers(); // Store as a copy
             for (std::vector<User>::iterator it = channelUsers.begin(); it != channelUsers.end(); ++it) {
                 send(it->_fd, msg.c_str(), msg.length(), 0);
             }
@@ -268,23 +264,19 @@ void Command::channelmsg(std::string channelName, const std::vector<std::string>
         return;
     }
 
-    // Locate the channel
     channelIter = channel_exist(channelName);
     if (channelIter == Server::_channels.end()) {
         ErrorMsg(user._fd, "403 :No such channel.\r\n", "403");
         return;
     }
 
-    // Check if user is part of the channel
     if (channelIter->isUser(user)) {
-        // Store users in a local reference to avoid dangling issues
-        std::vector<User>& channelUsers = channelIter->getUsers();
+        std::vector<User> channelUsers = channelIter->getUsers(); // Store as a copy
         for (std::vector<User>::iterator it = channelUsers.begin(); it != channelUsers.end(); ++it) {
             if (it->_fd != user._fd) {
                 std::string msg = ":" + user._nickname + " CHANNEL-MSG " + channelName + " :";
                 send(it->_fd, msg.c_str(), msg.length(), 0);
 
-                // Send the full message part-by-part
                 while (messageIndex < splitmsg.size()) {
                     send(it->_fd, splitmsg.at(messageIndex).c_str(), splitmsg.at(messageIndex).length(), 0);
                     if (messageIndex + 1 < splitmsg.size()) {

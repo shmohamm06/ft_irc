@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: shmohamm <shmohamm@student.42abudhabi.a    +#+  +:+       +#+        */
+/*   By: wyaseen <wyaseen@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/15 11:45:12 by abobylev          #+#    #+#             */
-/*   Updated: 2024/12/17 11:37:02 by shmohamm         ###   ########.fr       */
+/*   Updated: 2024/12/17 11:51:14 by wyaseen          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,7 +227,7 @@ void User::execute(std::string mes, User *user) {
         {
         std::string wlcmMsg = ":irc 001 " + user->_nickname + " :Welcome to FT_IRC, " + user->_username + "@" + Server::_hostName + "\r\n"
                       ":irc 002 " + user->_nickname + " :Your host is " + Server::_hostName + ", running version 1.0\r\n"
-                      ":irc 003 " + user->_nickname + " :This server was created in 42 labs at July\r\n"
+                      ":irc 003 " + user->_nickname + " :This server was created by Wahab, Shah & Alex\r\n"
                       ":irc 004 " + user->_nickname + " " + Server::_hostName + " 1.0 o OIRSv o oirwkl bkl\r\n"  // Sample modes
                       ":irc 005 " + user->_nickname + " MODES=20 CHANLIMIT=#&:100 NICKLEN=9 TOPICLEN=390 CHANTYPES=#& :are supported by this server\r\n";
         send(user->_fd, wlcmMsg.c_str(), wlcmMsg.length(), 0);
