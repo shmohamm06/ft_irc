@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: shmohamm <shmohamm@student.42abudhabi.a    +#+  +:+       +#+        */
+/*   By: wyaseen <wyaseen@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/15 11:45:22 by abobylev          #+#    #+#             */
-/*   Updated: 2024/12/17 11:22:17 by shmohamm         ###   ########.fr       */
+/*   Updated: 2024/12/17 11:25:28 by wyaseen          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,6 @@
 #define BRIGHT_YELLOW "\033[93m"
 #define BRIGHT_RED "\033[91m"
 #define BRIGHT_WHITE "\033[97m"
-#define BRIGHT_GREEN ""
 #define BRIGHT_BLUE "\033[94m"
 #define BRIGHT_CYAN "\033[96m"
 #define BLUE "\033[34m"
@@ -59,6 +58,9 @@
 
 
 // Reset
+#define RESET "\033[0m"
+#define BRIGHT_GREEN "\033[1;32m"
+#define BRIGHT_MAGENTA "\033[1;35m"
 #define RESET "\033[0m"
 
 
