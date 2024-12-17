@@ -18,7 +18,7 @@
 #define MAX_PORT UINT16_MAX
 #define MAX_BUFFER 1024
 #define MAX_HOST_NAME 512
-#define BUFFER_LIMIT 512  // Define maximum buffer size
+#define BUFFER_LIMIT 512  
 #define CYAN "\033[36m"
 #define YELLOW "\033[33m"
 #define RED "\033[31m"

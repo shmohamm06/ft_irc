@@ -175,7 +175,7 @@ void Channel::addUserToChannel(User user_object) {
 std::string channel_welcome_msg;
 
 // Welcome message
-channel_welcome_msg = BRIGHT_GREEN "Welcome to the \"" + this->getName() + "\" channel, " 
+channel_welcome_msg = BRIGHT_WHITE "Welcome to the \"" + this->getName() + "\" channel, " 
                        + user_object._nickname + "!" RESET "\r\n";
 channel_welcome_msg += BRIGHT_BLUE "Below are some commands to help you get started:" RESET "\r\n";
 
