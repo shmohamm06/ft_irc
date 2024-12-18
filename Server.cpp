@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: wyaseen <wyaseen@student.42.fr>            +#+  +:+       +#+        */
+/*   By: shmohamm <shmohamm@student.42abudhabi.a    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/15 11:45:12 by abobylev          #+#    #+#             */
-/*   Updated: 2024/12/17 11:51:14 by wyaseen          ###   ########.fr       */
+/*   Created: 2024/12/18 13:35:27 by shmohamm          #+#    #+#             */
+/*   Updated: 2024/12/18 13:40:57 by shmohamm         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,28 +20,37 @@
 #include <unistd.h>
 #include <unordered_map>
 
-// Static Member Initialization: Initializes server variables for configuration
-std::string Server::_password = ""; 
+// Initialize static member variables of the Server class
+std::string Server::_password = ""; // Server password
 std::string Server::bufferStr = "";
-std::string Server::_hostName = ""; 
+// Buffer string for message handling
+std::string Server::_hostName = ""; // Hostname of the server
 char Server::c_buffer[BUFFER_SIZE] = {0};
+// Character buffer for reading messages
 char Server::c_hostName[MAX_HOST_NAME] = {0};
-int Server::serverSocket = -1; 
+// Character buffer for storing hostname
+int Server::serverSocket = -1; // Server socket descriptor
 int Server::max_sd = -1;
-int Server::sd = -1; 
-int Server::valread = -1; 
-int Server::_port = -1; 
+// Maximum socket descriptor for select()
+int Server::sd = -1;      // Current socket descriptor
+int Server::valread = -1; // Value read from socket
+int Server::_port = -1;   // Server port number
 int Server::newSocket = -1;
+// New socket descriptor for accepted connections
 int Server::curIndex = -1;
+// Current index for handling clients
 int Server::addrlen = sizeof(struct sockaddr_in);
+// Length of the address structure
 std::vector<int> Server::_fds;
+// Vector of socket descriptors for connected clients
 std::vector<User> Server::users;
-struct sockaddr_in Server::address; 
+// Vector of User objects representing connected clients
+struct sockaddr_in Server::address; // Server address structure
 fd_set Server::readfds;
+// Set of socket descriptors for select()
 std::vector<Channel> Server::_channels;
 std::unordered_map<int, std::string> partialCommands;
 
-// Error checks
 void	Check(int ac)
 {
 	if (ac != 3)
@@ -59,46 +68,44 @@ void	valid_arg(std::string a, std::string b, int c)
 	}
 }
 
-// Socket Setup: Creates and configures the server socket
 void Server::openSocket()
 {
-	int opt;
+	int	opt;
 
 	if ((Server::serverSocket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+	{
 		throw ServerException(RED "Failed to create socket" RESET);
-
+	}
 	opt = 1;
-	if (setsockopt(Server::serverSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
+	if (setsockopt(Server::serverSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,
+			sizeof(opt)) < 0)
+	{
 		throw ServerException(RED "setsockopt failed" RESET);
-
-	if (fcntl(Server::serverSocket, F_SETFL, O_NONBLOCK) == -1)
-		throw ServerException(RED "Failed to set socket to non-blocking mode" RESET);
-
+	}
 	Server::address.sin_family = AF_INET;
 	Server::address.sin_addr.s_addr = INADDR_ANY;
 	Server::address.sin_port = htons(_port);
-
-	if (bind(Server::serverSocket, (struct sockaddr *)&Server::address, sizeof(Server::address)) < 0)
+	if (bind(Server::serverSocket, (struct sockaddr *)&Server::address,
+			sizeof(Server::address)) < 0)
+	{
 		throw ServerException(RED "Bind failed" RESET);
-
+	}
 	if (listen(Server::serverSocket, MAX_CLIENTS) < 0)
+	{
 		throw ServerException(RED "Listen failed" RESET);
-
+	}
 	addrlen = sizeof(Server::address);
 	gethostname(c_hostName, MAX_HOST_NAME);
 	Server::_hostName = c_hostName;
-
-	std::cout << UNDERLINE << GREEN << BOLD << "IRC Server started on port " 
-			  << _port << " : " << _hostName << RESET << std::endl;
+	std::cout << UNDERLINE << GREEN << BOLD << "IRC Server started on port " << _port << " : " << _hostName << RESET << std::endl;
 	std::cout << BLUE << BOLD << "Waiting for incoming connections..." << RESET << std::endl;
 }
 
-
-// Accepting Connections: Handles new client connections.
-// This function call will block until a client connects, at which point it
-// returns a new socket descriptor for the connection, allowing you to communicate with that client.
+//This function call will block until a client connects, at which point it
+//returns a new socket descriptor for the connection, allowing you to communicate with that client.
 void Server::acceptConnection()
 {
+    // Assume newSocket is the new socket descriptor for the connected client
     int newSocket = accept(serverSocket, (struct sockaddr*)&address, (socklen_t*)&addrlen);
 
     if (newSocket < 0) {
@@ -106,33 +113,35 @@ void Server::acceptConnection()
         return;
     }
 
+    // Create a new User object and initialize its FD
     User newUser;
-    newUser._fd = newSocket; 
-    newUser._nickname = ""; 
+    newUser._fd = newSocket; // Assign the file descriptor
+    newUser._nickname = ""; // Initialize nickname or other user attributes as needed
 
+    // Add the new user to the users vector
     users.push_back(newUser);
-    _fds.push_back(newSocket); 
+    _fds.push_back(newSocket); // Also add the socket to the file descriptor list
 }
 
-// Client Disconnection: Safely removes disconnected clients
+// Обработка отключения клиента
 void Server::handleClientDisconnection(size_t i)
 {
 	getpeername(sd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
 	std::cout << YELLOW << "Client disconnected" << RESET << std::endl;
 	close(sd);
-	_fds.erase(_fds.begin() + i);   
-	users.erase(users.begin() + i); 
+	_fds.erase(_fds.begin() + i);   // Удаляем сокет из вектора
+	users.erase(users.begin() + i); // Удаляем пользователя из списка
 }
 
 
-// User Commands Execution: Processes IRC commands like JOIN, WHO, etc
+
 void User::execute(std::string mes, User *user) {
     std::vector<std::string> splitmsg = split(mes);
     if (splitmsg.empty()) {
         return;
     }
 
-    Command cmd;
+    Command cmd; // Create a Command object
     std::string cmdType = splitmsg.at(0);
     if (cmdType == "JOIN") {
         if (splitmsg.size() == 2) {
@@ -148,7 +157,7 @@ void User::execute(std::string mes, User *user) {
         } else {
             return;
         }
-    } else if (cmdType == "PRIVMSG") {
+    } else if (cmdType == "PRIVMSG" || cmdType == "MSG") {
         if (splitmsg.size() >= 3) {
             cmd.privmsg(splitmsg.at(1), splitmsg, *user);
         } else if (splitmsg.size() == 2) {
@@ -160,21 +169,7 @@ void User::execute(std::string mes, User *user) {
             send(user->_fd, S.c_str(), strlen(S.c_str()), 0);
             return;
         }
-    } 
-    else if (cmdType == "MSG") {
-        if (splitmsg.size() >= 3) {
-            cmd.channelmsg(splitmsg.at(1), splitmsg, *user);
-        } else if (splitmsg.size() == 2) {
-            ErrorMsg(user->_fd, "411 :No recipient given\r\n", "411");
-        } else if (splitmsg.size() == 1) {
-            ErrorMsg(user->_fd, "411 :No recipient given\r\n", "411");
-        } else {
-            std::string S = "461 :Not enough parameters\r\n";
-            send(user->_fd, S.c_str(), strlen(S.c_str()), 0);
-            return;
-        }
-    }
- else if (cmdType == "PING") {
+    } else if (cmdType == "PING") {
         std::string pong = "PONG\r\n";
         send(user->_fd, pong.c_str(), pong.length(), 0);
     } else if (cmdType == "INVITE") {
@@ -227,7 +222,7 @@ void User::execute(std::string mes, User *user) {
         {
         std::string wlcmMsg = ":irc 001 " + user->_nickname + " :Welcome to FT_IRC, " + user->_username + "@" + Server::_hostName + "\r\n"
                       ":irc 002 " + user->_nickname + " :Your host is " + Server::_hostName + ", running version 1.0\r\n"
-                      ":irc 003 " + user->_nickname + " :This server was created by Wahab, Shah & Alex\r\n"
+                      ":irc 003 " + user->_nickname + " :This server was created in 42 labs at July\r\n"
                       ":irc 004 " + user->_nickname + " " + Server::_hostName + " 1.0 o OIRSv o oirwkl bkl\r\n"  // Sample modes
                       ":irc 005 " + user->_nickname + " MODES=20 CHANLIMIT=#&:100 NICKLEN=9 TOPICLEN=390 CHANTYPES=#& :are supported by this server\r\n";
         send(user->_fd, wlcmMsg.c_str(), wlcmMsg.length(), 0);
@@ -252,15 +247,18 @@ void Server::handleClientMessages() {
             if ((valread = read(sd, c_buffer, BUFFER_SIZE)) == 0) {
                 handleClientDisconnection(i);
             } else {
-                c_buffer[valread] = '\0'; 
+                c_buffer[valread] = '\0';  // Null-terminate the received data
 
+                // Append received data to any existing partial command
                 partialCommands[sd] += c_buffer;
 
+                // Process complete commands
                 size_t pos;
                 while ((pos = partialCommands[sd].find('\n')) != std::string::npos) {
                     std::string command = partialCommands[sd].substr(0, pos);
                     partialCommands[sd] = partialCommands[sd].substr(pos + 1);
 
+                    // Remove '\r' if present
                     if (!command.empty() && command.back() == '\r') {
                         command.pop_back();
                     }
@@ -272,7 +270,6 @@ void Server::handleClientMessages() {
     }
 }
 
-// Processes a client's command and handles IRC-specific logic for NICK, USER, and PASS
 void Server::processCommand(int sd, const std::string& command) {
     std::vector<std::string> splitmsg = split(command);
 
@@ -314,6 +311,7 @@ void Server::processCommand(int sd, const std::string& command) {
         }
     }
 
+    // Check if user has completed registration
     if (users[userIndex].pass_flag == 1 && users[userIndex].nick_flag == 1 && users[userIndex].user_flag == 1) {
         users[userIndex].execute(command, &users[userIndex]);
     }
@@ -339,7 +337,7 @@ bool Server::isUsernameTaken(const std::string &user) {
     return false;
 }
 
-// Main server loop that monitors connections, accepts new clients, and handles messages
+
 void Server::run()
 {
     while (true) {

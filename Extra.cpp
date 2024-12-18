@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Extra.cpp                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: shmohamm <shmohamm@student.42abudhabi.a    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/18 13:49:32 by shmohamm          #+#    #+#             */
+/*   Updated: 2024/12/18 13:49:33 by shmohamm         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Extra.hpp"
 
 void ErrorMsg(int fd, const std::string &error_msg, const std::string &code)

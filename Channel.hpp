@@ -1,77 +1,46 @@
-#ifndef CHANNEL_HPP
-#define CHANNEL_HPP
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Channel.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: shmohamm <shmohamm@student.42abudhabi.a    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/18 13:44:25 by shmohamm          #+#    #+#             */
+/*   Updated: 2024/12/18 13:44:26 by shmohamm         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef COMMAND_HPP
+# define COMMAND_HPP
 
 #include <iostream>
 #include <string>
-#include <map>
 #include <vector>
-#include <cstring>
-#include <cstring>
-#include <cstdlib>
-#include <stdlib.h>
 #include "Server.hpp"
-#include <ctime>
-#include <string>
-#include <vector>
-#include <map>
+#include "Channel.hpp"
 
 class User;
-class Channel
-{
-	private:
-		int _user_limit;
-		std::string _pass;
-		std::string _topic;
-		std::map<char, int> _mode;
-		time_t _creation_time;
-	public:
-		Channel();
-		std::string name;
-		std::vector<User> invites;
-		std::vector<User> operators;
-		std::vector<User> users;
-		std::string message;
-		std::vector<User>::iterator it_user;
-		std::vector<User>::iterator it_operators;
-		std::vector<User>::iterator it_invites;
-		Channel(std::string str_name, std::string str_pass);
-		~Channel();
+class Channel;
 
-		int getUserInfo();
-		std::string getTopic();
-		std::string getPass();
-		std::map<char, int> getMode();
-		std::vector<User> getUsers();
-		std::vector<User> getOperators();
-		std::string getName() const;
-		time_t getCreationTime() const;
-		void sendUserListToChannel();
-		void sendChannelSummary() ;
-		void sendCreationTime();
-		void sendWelcomeMessage(User user_object);
+class Command {
+    private:
+        std::string message;
+        std::vector<Channel>::iterator channel_it;
+        std::vector<User>::iterator user_it;
 
-		void setUserInfo(int num);
-		void setTopic(std::string str);
-		void setPass(std::string str);
-		void setMode(char m, char sign);
-
-		void addUserToChannel(User new_user_object);
-		void exec_mode(std::string mode, User &user_object, std::string arg);
-		std::vector<User>::iterator user_in_chan(int fd);
-		std::vector<User>::iterator channel_operator(int fd);
-		std::vector<User>::iterator inv_in_chan(int fd);
-		int user_length(void);
-
-		int isInvited(User user);
-		int isMode(char m);
-		int isOperator(User user);
-		int isUser(User user);
-		void delete_from_all(User& user);
-
-		void removeUser(User& user);
-		void removeInvite(User& user);
-		void removeOperator(User& user);
-		bool isEmpty();
+    public:
+        Command(void);
+        ~Command(void);
+        void ajoin(std::string channelName, std::string channelKey, User user);
+        void who(std::string channel_s, User user);
+        void privmsg(std::string receiver, const std::vector<std::string>& splitmsg, User user);
+        void invite(std::string invitee, std::string channel, User requesting_user);
+        void kick(std::string channel, std::string user_kick, const std::vector<std::string>& splitmsg, User user);
+        void mode(std::string channel_s, std::string mode, User user, std::string arg);
+        void topic(std::string channel_s, std::string topic, User user);
+        std::vector<std::string> ft_split(std::string str, char delimiter);
+        std::vector<Channel>::iterator channel_exist(std::string channel);
+        std::vector<User>::iterator user_exist(std::string nick);
 };
 
 #endif
